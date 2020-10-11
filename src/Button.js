@@ -1,8 +1,6 @@
 import React from "react";
 
 const Button = ({ active, onMouseDown, children }) => {
-  console.log("active: ", active);
-
   return (
     <button
       active={`${active}`}
