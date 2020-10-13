@@ -7,6 +7,7 @@ import { withHistory } from "slate-history";
 import Button from "./Button";
 import Icon from "./Icon";
 import Toolbar from "./Toolbar";
+import { FontBoldIcon } from "@modulz/radix-icons";
 import "./styles.css";
 
 const HOTKEYS = {
@@ -101,46 +102,68 @@ const isRange = editor => {
 };
 
 const toggleLink = (editor, format) => {
+  const { isInline } = editor;
   const selected = isRange(editor);
-  const { selection } = editor;
-  const range = editor.selection && Range.edges(selection);
-  console.log("range: ", editor.selection.focus);
-
   const isActive = isLinkActive(editor, format);
-  Transforms.splitNodes(editor, { at: editor.selection.focus });
-  Transforms.setNodes(editor, {
-    type: isActive ? "paragraph" : format,
-    isInline: true,
-    url: selected,
-  });
+  const { anchor, focus } = editor.selection;
+  const [{ type }] = Node.fragment(editor, editor.selection);
 
-  /* , {
-    type: isActive ? "paragraph" : format,
+  const link = {
+    type: "link",
     isInline: true,
     url: selected,
-  }); */
+    children: [{ text: selected }],
+  };
+
+  if (
+    editor.selection &&
+    Range.isExpanded(editor.selection) &&
+    type !== "link"
+  ) {
+    /* Transforms.splitNodes(editor, { at: end });
+    Transforms.splitNodes(editor, { at: start }); */
+
+    Transforms.select(editor, { anchor, focus });
+
+    Transforms.insertNodes(editor, link);
+    console.log(editor.isInline("link"));
+  } else {
+    console.log(editor.isInline("link"));
+    /* Transforms.mergeNodes(editor, { at: end });
+    Transforms.mergeNodes(editor, { at: start }); */
+    Transforms.removeNodes(editor, link);
+    Transforms.insertNodes(editor, {
+      type: "span",
+      children: [{ text: selected }],
+    });
+  }
 };
 
 const isLinkActive = (editor, format) => {
   const [match] = Editor.nodes(editor, {
     match: n => n.type === format,
   });
+  console.log("match: ", !!match);
   return !!match;
 };
 
 const Element = ({ attributes, children, element }) => {
-  console.log("attrs: ", attributes);
+  /* console.log("attrs: ", attributes, children, element); */
   switch (element.type) {
     case "block-quote":
       return <blockquote {...attributes}>{children}</blockquote>;
     case "link":
       return (
-        <a {...attributes} href={element.url}>
+        <a
+          {...attributes}
+          href={element.url}
+          onClick={e => console.log(e.target)}
+        >
           {children}
         </a>
       );
     default:
-      return <span {...attributes}>{children}</span>;
+      return <p {...attributes}>{children}</p>;
   }
 };
 
@@ -222,7 +245,7 @@ const LinkButton = ({ format, icon }) => {
 
 const initialValue = [
   {
-    type: "div",
+    type: "paragraph",
     children: [{ text: "Say something... " }],
   },
 ];
