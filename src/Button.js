@@ -1,11 +1,12 @@
 import React from "react";
 
-const Button = ({ active, onMouseDown, children }) => {
+const Button = ({ active, className, onMouseDown, children, style }) => {
   return (
     <button
-      active={`${active}`}
+      className={className}
+      active={`${active}` || null}
       onMouseDown={onMouseDown}
-      style={{ backgroundColor: active ? "red" : "gray" }}
+      style={{ opacity: active ? 1 : 0.5 }}
     >
       {children}
     </button>

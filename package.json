@@ -6,6 +6,7 @@
   "main": "src/index.js",
   "dependencies": {
     "@modulz/radix-icons": "^3.1.0",
+    "image-extensions": "^1.1.0",
     "immutable": "4.0.0-rc.12",
     "is-hotkey": "0.1.6",
     "is-url": "^1.2.4",

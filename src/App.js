@@ -1,13 +1,38 @@
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import isHotKey from "is-hotkey";
-import isUrl from "is-url";
-import { createEditor, Range, Editor, Transforms, Node } from "slate";
-import { Slate, Editable, withReact, useSlate } from "slate-react";
+/* import isUrl from "is-url"; */
+
+import { createEditor, Range, Editor, Transforms, Point, Node } from "slate";
+import {
+  Slate,
+  Editable,
+  useEditor,
+  useSelected,
+  useFocused,
+  withReact,
+  useSlate,
+} from "slate-react";
 import { withHistory } from "slate-history";
 import Button from "./Button";
-import Icon from "./Icon";
+/* import Icon from "./Icon"; */
 import Toolbar from "./Toolbar";
-import { FontBoldIcon } from "@modulz/radix-icons";
+import {
+  withLinks,
+  insertLink,
+  isLinkActive,
+  removeLink,
+} from "./helpers/withLinks";
+import { withImages, insertImage } from "./helpers/withImages";
+import {
+  FontBoldIcon,
+  FontItalicIcon,
+  UnderlineIcon,
+  CodeIcon,
+  QuoteIcon,
+  Link2Icon,
+  ImageIcon,
+  SwitchIcon,
+} from "@modulz/radix-icons";
 import "./styles.css";
 
 const HOTKEYS = {
@@ -23,40 +48,89 @@ const App = () => {
   const [value, setValue] = useState(initialValue);
   const renderElement = useCallback(props => <Element {...props} />, []);
   const renderLeaf = useCallback(props => <Leaf {...props} />, []);
-  const editor = useMemo(() => withHistory(withReact(createEditor())), []);
+  const editor = useMemo(
+    () => withImages(withLinks(withHistory(withReact(createEditor())))),
+    []
+  );
+  const [toolbar, setToolbar] = useState(false);
+  const [messageEntry, setEntry] = useState(false);
 
   /*   const { isInline } = editor;
   editor.isInline = element => {
     return element.type === "link" ? true : isInline(element);
   }; */
   return (
-    <Slate editor={editor} value={value} onChange={value => setValue(value)}>
-      <Toolbar>
-        <MarkButton format="bold" icon="bold" />
-        <MarkButton format="italic" icon="italic" />
-        <MarkButton format="underline" icon="underline" />
-        <MarkButton format="code" icon="code" />
-        <BlockButton format="block-quote" icon="quote" />
-        <LinkButton format="link" icon="link" />
-      </Toolbar>
-      <Editable
-        renderElement={renderElement}
-        renderLeaf={renderLeaf}
-        placeholder="Start typing..."
-        style={{ padding: "0 .2em 0 .2em" }}
-        spellCheck
-        autoFocus
-        onKeyDown={event => {
-          for (const hotkey in HOTKEYS) {
-            if (isHotKey(hotkey, event)) {
-              event.preventDefault();
-              const mark = HOTKEYS[hotkey];
-              toggleMark(editor, mark);
-            }
-          }
-        }}
-      />
-    </Slate>
+    <>
+      <div className="channel">
+        <div className="channel-view">Channel View Area</div>
+        {messageEntry ? (
+          <div className="entry">This is the entry area</div>
+        ) : null}
+
+        <div className="chatbox-form">
+          <ToolbarButton
+            className="toolbar-switch"
+            toolbar={toolbar}
+            onMouseDown={() => setToolbar(!toolbar)}
+          >
+            <SwitchIcon />
+          </ToolbarButton>
+
+          <Slate
+            editor={editor}
+            value={value}
+            onChange={value => setValue(value)}
+          >
+            <div className="scrollable">
+              <Editable
+                className="editor"
+                renderElement={renderElement}
+                renderLeaf={renderLeaf}
+                placeholder="Start typing..."
+                style={{ padding: "0 .2em 0 .2em" }}
+                spellCheck
+                autoFocus
+                onKeyDown={event => {
+                  for (const hotkey in HOTKEYS) {
+                    if (isHotKey(hotkey, event)) {
+                      event.preventDefault();
+                      const mark = HOTKEYS[hotkey];
+                      toggleMark(editor, mark);
+                    }
+                  }
+                }}
+              />
+            </div>
+
+            {toolbar ? (
+              <Toolbar>
+                <MarkButton format="bold" icon="bold">
+                  <FontBoldIcon />
+                </MarkButton>
+                <MarkButton format="italic" icon="italic">
+                  <FontItalicIcon />
+                </MarkButton>
+                <MarkButton format="underline" icon="underline">
+                  <UnderlineIcon />
+                </MarkButton>
+                <MarkButton format="code" icon="code">
+                  <CodeIcon />
+                </MarkButton>
+                <BlockButton format="block-quote" icon="quote">
+                  <QuoteIcon />
+                </BlockButton>
+                <LinkButton format="link" icon="link">
+                  <Link2Icon />
+                </LinkButton>
+                <ImageButton format="image">
+                  <ImageIcon />
+                </ImageButton>
+              </Toolbar>
+            ) : null}
+          </Slate>
+        </div>
+      </div>
+    </>
   );
 };
 
@@ -102,53 +176,20 @@ const isRange = editor => {
 };
 
 const toggleLink = (editor, format) => {
-  const { isInline } = editor;
-  const selected = isRange(editor);
+  let selected = isRange(editor);
+
+  /*  const [{ type }] = Node.fragment(editor, editor.selection); */
   const isActive = isLinkActive(editor, format);
-  const { anchor, focus } = editor.selection;
-  const [{ type }] = Node.fragment(editor, editor.selection);
 
-  const link = {
-    type: "link",
-    isInline: true,
-    url: selected,
-    children: [{ text: selected }],
-  };
-
-  if (
-    editor.selection &&
-    Range.isExpanded(editor.selection) &&
-    type !== "link"
-  ) {
-    /* Transforms.splitNodes(editor, { at: end });
-    Transforms.splitNodes(editor, { at: start }); */
-
-    Transforms.select(editor, { anchor, focus });
-
-    Transforms.insertNodes(editor, link);
-    console.log(editor.isInline("link"));
+  if (!isActive) {
+    insertLink(editor, selected);
   } else {
-    console.log(editor.isInline("link"));
-    /* Transforms.mergeNodes(editor, { at: end });
-    Transforms.mergeNodes(editor, { at: start }); */
-    Transforms.removeNodes(editor, link);
-    Transforms.insertNodes(editor, {
-      type: "span",
-      children: [{ text: selected }],
-    });
+    removeLink(editor);
   }
 };
 
-const isLinkActive = (editor, format) => {
-  const [match] = Editor.nodes(editor, {
-    match: n => n.type === format,
-  });
-  console.log("match: ", !!match);
-  return !!match;
-};
-
 const Element = ({ attributes, children, element }) => {
-  /* console.log("attrs: ", attributes, children, element); */
+  const { ...props } = { attributes, children, element };
   switch (element.type) {
     case "block-quote":
       return <blockquote {...attributes}>{children}</blockquote>;
@@ -162,6 +203,8 @@ const Element = ({ attributes, children, element }) => {
           {children}
         </a>
       );
+    case "image":
+      return <ImageElement {...props} />;
     default:
       return <p {...attributes}>{children}</p>;
   }
@@ -195,7 +238,7 @@ const Leaf = ({ attributes, children, leaf }) => {
   return <span {...attributes}>{children}</span>;
 };
 
-const BlockButton = ({ format, icon }) => {
+const BlockButton = ({ format, icon, children }) => {
   const editor = useSlate();
   return (
     <Button
@@ -206,12 +249,12 @@ const BlockButton = ({ format, icon }) => {
         toggleBlock(editor, format);
       }}
     >
-      <Icon>{icon}</Icon>
+      {children}
     </Button>
   );
 };
 
-const MarkButton = ({ format, icon }) => {
+const MarkButton = ({ format, icon, children }) => {
   const editor = useSlate();
   return (
     <Button
@@ -222,12 +265,12 @@ const MarkButton = ({ format, icon }) => {
         toggleMark(editor, format);
       }}
     >
-      <Icon>{icon}</Icon>
+      {children}
     </Button>
   );
 };
 
-const LinkButton = ({ format, icon }) => {
+const LinkButton = ({ format, icon, children }) => {
   const editor = useSlate();
   return (
     <Button
@@ -238,8 +281,58 @@ const LinkButton = ({ format, icon }) => {
         toggleLink(editor, format);
       }}
     >
-      <Icon>{icon}</Icon>
+      {children}
     </Button>
+  );
+};
+
+const ImageButton = ({ format, children }) => {
+  const editor = useEditor();
+  return (
+    <Button
+      key="image"
+      /* active={isLinkActive(editor, format)} */
+      onMouseDown={event => {
+        event.preventDefault();
+        const url = prompt("Enter the image URL: ");
+        console.log("image url: ", url);
+        if (!url) return;
+
+        insertImage(editor, url);
+      }}
+    >
+      {children}
+    </Button>
+  );
+};
+
+const ToolbarButton = ({ className, children, onMouseDown, toolbar }) => {
+  return (
+    <Button
+      className={className}
+      key="toolbar-switch"
+      onMouseDown={onMouseDown}
+      style={{ backgroundColor: toolbar ? "green" : "red" }}
+    >
+      {children}
+    </Button>
+  );
+};
+
+const ImageElement = ({ attributes, children, element }) => {
+  /* const selected = useSelected();
+  const focused = useFocused(); */
+  return (
+    <div {...attributes}>
+      <div contentEditable={false}>
+        <img
+          src={element.url}
+          alt="gee"
+          style={{ display: "block", maxWidth: "100%", maxHeight: "10em" }}
+        />
+      </div>
+      {children}
+    </div>
   );
 };
 
