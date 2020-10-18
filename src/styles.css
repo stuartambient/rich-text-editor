@@ -8,28 +8,38 @@ body {
 
 .channel {
   margin: 2% 15%;
-  display: grid;
-  grid-auto-rows: min-content;
-  grid-template-columns: 1em 1fr 1em;
+  display: flex;
+  flex-direction: column;
+  z-index: -100;
 }
 
 .channel-view {
   background-color: rgb(30, 46, 46);
   color: white;
-  grid-column: 1 / -1;
-  grid-row: 1 / 2;
-
-  min-height: 100px;
+  min-height: 300px;
+  max-height: 300px;
+  overflow-y: scroll;
+  scrollbar-width: none;
 }
+
+/* .form-wrapper {
+  position: absolute;
+  margin: 2% 15%;
+  width: inherit;
+  top: 100px;
+  z-index: 101;
+} */
+
+.form-wrapper {
+  position: sticky;
+  bottom: 200px;
+}
+
 .chatbox-form {
-  grid-row: 2 / 3;
-  grid-column: 1 / -1;
-  /*  margin: 2% 15%; */
-  max-height: 100px;
   display: grid;
   grid-template-rows: auto 1fr 2em;
   grid-template-columns: 1em 1fr 1em;
-  background-color: rgb(30, 46, 46);
+  background-color: rgb(53, 59, 59);
   color: white;
 }
 
@@ -37,10 +47,12 @@ body {
   grid-row: 2 /3;
   max-width: 100%;
   grid-column: 1 / -1;
+
   overflow-x: hidden;
   overflow-y: scroll;
   scrollbar-width: none;
-  /* max-height: 3rem; */
+  max-height: 30vh;
+  line-height: 0.8;
 }
 
 .editor {
@@ -48,15 +60,16 @@ body {
   overflow-wrap: break-word;
   word-break: break-word;
   white-space: break-spaces !important;
-  max-height: 200px;
+  /* max-height: 200px; */
 }
+
 .toolbar {
   justify-self: stretch;
   background-color: none;
   display: flex;
   flex-direction: row;
   grid-row: 3 /4;
-  grid-column: 1 / -1;
+  grid-column: 1 / 3;
 }
 
 button:not(.toolbar-switch) {
@@ -92,7 +105,8 @@ button:active > svg {
 
 .toolbar-switch {
   border: none;
-  grid-row: 1 / 2;
+  grid-row: 3/4;
+  grid-column: 2/3;
   width: 1em;
   background-color: transparent;
   justify-self: center;

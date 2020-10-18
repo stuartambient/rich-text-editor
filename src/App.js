@@ -33,6 +33,7 @@ import {
   ImageIcon,
   SwitchIcon,
 } from "@modulz/radix-icons";
+import text from "./text";
 import "./styles.css";
 
 const HOTKEYS = {
@@ -53,8 +54,6 @@ const App = () => {
     []
   );
   const [toolbar, setToolbar] = useState(false);
-  const [messageEntry, setEntry] = useState(false);
-
   /*   const { isInline } = editor;
   editor.isInline = element => {
     return element.type === "link" ? true : isInline(element);
@@ -62,73 +61,76 @@ const App = () => {
   return (
     <>
       <div className="channel">
-        <div className="channel-view">Channel View Area</div>
-        {messageEntry ? (
-          <div className="entry">This is the entry area</div>
-        ) : null}
-
-        <div className="chatbox-form">
-          <ToolbarButton
-            className="toolbar-switch"
-            toolbar={toolbar}
-            onMouseDown={() => setToolbar(!toolbar)}
-          >
-            <SwitchIcon />
-          </ToolbarButton>
-
-          <Slate
-            editor={editor}
-            value={value}
-            onChange={value => setValue(value)}
-          >
-            <div className="scrollable">
-              <Editable
-                className="editor"
-                renderElement={renderElement}
-                renderLeaf={renderLeaf}
-                placeholder="Start typing..."
-                style={{ padding: "0 .2em 0 .2em" }}
-                spellCheck
-                autoFocus
-                onKeyDown={event => {
-                  for (const hotkey in HOTKEYS) {
-                    if (isHotKey(hotkey, event)) {
-                      event.preventDefault();
-                      const mark = HOTKEYS[hotkey];
-                      toggleMark(editor, mark);
-                    }
-                  }
-                }}
-              />
-            </div>
-
-            {toolbar ? (
-              <Toolbar>
-                <MarkButton format="bold" icon="bold">
-                  <FontBoldIcon />
-                </MarkButton>
-                <MarkButton format="italic" icon="italic">
-                  <FontItalicIcon />
-                </MarkButton>
-                <MarkButton format="underline" icon="underline">
-                  <UnderlineIcon />
-                </MarkButton>
-                <MarkButton format="code" icon="code">
-                  <CodeIcon />
-                </MarkButton>
-                <BlockButton format="block-quote" icon="quote">
-                  <QuoteIcon />
-                </BlockButton>
-                <LinkButton format="link" icon="link">
-                  <Link2Icon />
-                </LinkButton>
-                <ImageButton format="image">
-                  <ImageIcon />
-                </ImageButton>
-              </Toolbar>
-            ) : null}
-          </Slate>
+        <div className="channel-view">
+          Channel View Area
+          <span>{text}</span>
         </div>
+
+        <div className="form-wrapper">
+          <div className="chatbox-form">
+            <ToolbarButton
+              className="toolbar-switch"
+              toolbar={toolbar}
+              onMouseDown={() => setToolbar(!toolbar)}
+            >
+              <SwitchIcon />
+            </ToolbarButton>
+
+            <Slate
+              editor={editor}
+              value={value}
+              onChange={value => setValue(value)}
+            >
+              <div className="scrollable">
+                <Editable
+                  className="editor"
+                  renderElement={renderElement}
+                  renderLeaf={renderLeaf}
+                  placeholder="Start typing..."
+                  style={{ padding: "0 .2em 0 .2em" }}
+                  spellCheck
+                  autoFocus
+                  onKeyDown={event => {
+                    for (const hotkey in HOTKEYS) {
+                      if (isHotKey(hotkey, event)) {
+                        event.preventDefault();
+                        const mark = HOTKEYS[hotkey];
+                        toggleMark(editor, mark);
+                      }
+                    }
+                  }}
+                />
+              </div>
+
+              {toolbar ? (
+                <Toolbar>
+                  <MarkButton format="bold" icon="bold">
+                    <FontBoldIcon />
+                  </MarkButton>
+                  <MarkButton format="italic" icon="italic">
+                    <FontItalicIcon />
+                  </MarkButton>
+                  <MarkButton format="underline" icon="underline">
+                    <UnderlineIcon />
+                  </MarkButton>
+                  <MarkButton format="code" icon="code">
+                    <CodeIcon />
+                  </MarkButton>
+                  <BlockButton format="block-quote" icon="quote">
+                    <QuoteIcon />
+                  </BlockButton>
+                  <LinkButton format="link" icon="link">
+                    <Link2Icon />
+                  </LinkButton>
+                  <ImageButton format="image">
+                    <ImageIcon />
+                  </ImageButton>
+                </Toolbar>
+              ) : null}
+            </Slate>
+          </div>
+        </div>
+        {/* <div className="push"></div> */}
       </div>
     </>
   );
